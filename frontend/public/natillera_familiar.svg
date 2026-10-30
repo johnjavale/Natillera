@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" role="img" aria-labelledby="t">
+  <title id="t">Natillera Familiar: una alcancía con monedas y una familia</title>
+  <rect width="240" height="160" rx="24" fill="#fff8eb"/>
+  <circle cx="60" cy="58" r="14" fill="#a05410"/>
+  <path d="M38 112c0-16 10-28 22-28s22 12 22 28z" fill="#c96f10"/>
+  <circle cx="180" cy="58" r="14" fill="#5a2f0c"/>
+  <path d="M158 112c0-16 10-28 22-28s22 12 22 28z" fill="#a05410"/>
+  <circle cx="120" cy="40" r="11" fill="#c96f10"/>
+  <ellipse cx="120" cy="100" rx="40" ry="30" fill="#e8891b"/>
+  <circle cx="148" cy="92" r="4" fill="#5a2f0c"/>
+  <rect x="104" y="68" width="32" height="6" rx="3" fill="#5a2f0c"/>
+  <rect x="96" y="124" width="10" height="14" rx="4" fill="#c96f10"/>
+  <rect x="134" y="124" width="10" height="14" rx="4" fill="#c96f10"/>
+  <circle cx="120" cy="22" r="0" fill="none"/>
+  <g fill="#fcd38d" stroke="#a05410" stroke-width="2">
+    <circle cx="112" cy="58" r="7"/>
+    <circle cx="128" cy="56" r="7"/>
+  </g>
+  <path d="M20 140h200" stroke="#1f8a4c" stroke-width="4" stroke-linecap="round"/>
+</svg>

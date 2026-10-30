@@ -1,0 +1,15 @@
+# Perfil de desarrollo: datos semilla, Swagger UI y fecha simulada dentro del ciclo 2027.
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-solo-local-cambiar-0123456789abcdef0123456789}
+  fecha-simulada: ${FECHA_SIMULADA:2027-03-20}

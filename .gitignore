@@ -1,0 +1,23 @@
+# Backend
+backend/target/
+*.jsa
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/playwright-report/
+frontend/test-results/
+frontend/next-env.d.ts
+frontend/*.tsbuildinfo
+
+# Entornos y secretos
+.env
+.env.local
+*.env
+
+# IDE / SO
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

@@ -1,0 +1,6 @@
+* text=auto
+# Scripts que se ejecutan en Linux (CI, Docker): siempre LF
+*.sh text eol=lf
+backend/mvnw text eol=lf
+# Scripts de Windows
+*.cmd text eol=crlf

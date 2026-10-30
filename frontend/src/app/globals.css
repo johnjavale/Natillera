@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-stone-50 text-stone-900 antialiased;
+}
+
+@media print {
+  nav,
+  .no-imprimir {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+  section {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+}

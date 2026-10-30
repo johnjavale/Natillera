@@ -1,0 +1,9 @@
+# Perfil de producción (Railway). Toda la configuración sensible llega por variables de entorno.
+spring:
+  main:
+    lazy-initialization: true
+
+logging:
+  level:
+    root: INFO
+    co.natillera: INFO

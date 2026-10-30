@@ -1,0 +1,51 @@
+# Entorno local completo: PostgreSQL 16 + backend (perfil dev con seed) + frontend.
+#   docker compose up --build
+#   http://localhost:3000  (admin@natillera.local / Natillera2027*)
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: natillera
+      POSTGRES_USER: natillera
+      POSTGRES_PASSWORD: natillera
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U natillera -d natillera"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DATABASE_URL: jdbc:postgresql://postgres:5432/natillera
+      DATABASE_USER: natillera
+      DATABASE_PASSWORD: natillera
+      JWT_SECRET: secreto-solo-para-desarrollo-local-0123456789abcdef
+      CORS_ALLOWED_ORIGIN: http://localhost:3000
+      FRONTEND_URL: http://localhost:3000
+      FECHA_SIMULADA: "2027-03-20"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 400m
+
+  frontend:
+    build: ./frontend
+    environment:
+      BACKEND_URL: http://backend:8080
+      SESSION_SECRET: secreto-de-sesion-solo-desarrollo-0123456789abcdef
+      COOKIE_SECURE: "false"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

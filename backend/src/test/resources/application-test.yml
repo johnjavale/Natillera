@@ -1,0 +1,19 @@
+# Pruebas de integración: PostgreSQL real (Testcontainers o embebido) con el esquema y el seed de desarrollo.
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed
+  main:
+    lazy-initialization: false
+
+app:
+  jwt:
+    secret: secreto-de-pruebas-0123456789abcdef0123456789abcdef
+  cors:
+    allowed-origin: http://localhost:3000
+  # bcrypt 12 en producción; en pruebas se mantiene 12 para validar los hashes del seed
+  fecha-simulada: 2027-03-20
+
+logging:
+  level:
+    root: WARN
+    co.natillera: INFO
