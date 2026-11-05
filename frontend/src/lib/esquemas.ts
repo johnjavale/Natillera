@@ -16,19 +16,29 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Ingrese su contraseña').max(72),
 });
 
+const contrasenaNueva = z
+  .string()
+  .min(10, 'Mínimo 10 caracteres')
+  .max(72, 'Máximo 72 caracteres')
+  .regex(/[A-Za-zÁÉÍÓÚáéíóúÑñ]/, 'Debe incluir letras')
+  .regex(/\d/, 'Debe incluir números');
+
 export const cambiarPasswordSchema = z
   .object({
     actual: z.string().min(1, 'Ingrese la contraseña actual'),
-    nueva: z
-      .string()
-      .min(10, 'Mínimo 10 caracteres')
-      .max(72, 'Máximo 72 caracteres')
-      .regex(/[A-Za-zÁÉÍÓÚáéíóúÑñ]/, 'Debe incluir letras')
-      .regex(/\d/, 'Debe incluir números'),
+    nueva: contrasenaNueva,
     confirmacion: z.string(),
   })
   .refine((d) => d.nueva === d.confirmacion, { path: ['confirmacion'], message: 'Las contraseñas no coinciden' })
   .refine((d) => d.nueva !== d.actual, { path: ['nueva'], message: 'Debe ser diferente a la actual' });
+
+export const recuperarPasswordSchema = z.object({
+  correo: z.string().trim().min(1, 'Ingrese su correo').email('Correo inválido').max(160),
+});
+
+export const restablecerPasswordSchema = z
+  .object({ nueva: contrasenaNueva, confirmacion: z.string() })
+  .refine((d) => d.nueva === d.confirmacion, { path: ['confirmacion'], message: 'Las contraseñas no coinciden' });
 
 export const TIPOS_MANUALES = [
   { valor: 'AHORRO', etiqueta: 'Ahorro' },

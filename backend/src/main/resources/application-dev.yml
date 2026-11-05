@@ -13,3 +13,6 @@ app:
   jwt:
     secret: ${JWT_SECRET:dev-secret-solo-local-cambiar-0123456789abcdef0123456789}
   fecha-simulada: ${FECHA_SIMULADA:2027-03-20}
+  # Sin SMTP, el correo (con el enlace de recuperación) se escribe en la consola
+  correo:
+    mostrar-en-log: true

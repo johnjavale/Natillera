@@ -12,16 +12,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Railway expone la URL de MySQL como {@code mysql://usuario:clave@host:puerto/base} (variable MYSQL_URL, que se
- * pasa como DATABASE_URL). Si llega en ese formato, se traduce a las propiedades JDBC de Spring. Si ya es
- * {@code jdbc:mysql://...}, se usa tal cual.
+ * Railway expone DATABASE_URL como {@code postgresql://usuario:clave@host:puerto/base}. Si llega en ese formato,
+ * se traduce a las propiedades JDBC de Spring. Si ya es {@code jdbc:postgresql://...}, se usa tal cual.
  */
 public class DatabaseUrlPostProcessor implements EnvironmentPostProcessor {
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication application) {
         String url = env.getProperty("DATABASE_URL");
-        if (url == null || !url.startsWith("mysql://")) {
+        if (url == null || !(url.startsWith("postgres://") || url.startsWith("postgresql://"))) {
             return;
         }
         Map<String, Object> props = new HashMap<>(convertir(url));
@@ -29,11 +28,11 @@ public class DatabaseUrlPostProcessor implements EnvironmentPostProcessor {
     }
 
     static Map<String, String> convertir(String url) {
-        URI uri = URI.create(url.replaceFirst("^mysql://", "http://"));
+        URI uri = URI.create(url.replaceFirst("^postgres(ql)?://", "http://"));
         Map<String, String> props = new HashMap<>();
-        int puerto = uri.getPort() == -1 ? 3306 : uri.getPort();
+        int puerto = uri.getPort() == -1 ? 5432 : uri.getPort();
         String query = uri.getRawQuery() == null ? "" : "?" + uri.getRawQuery();
-        props.put("spring.datasource.url", "jdbc:mysql://" + uri.getHost() + ":" + puerto + uri.getRawPath() + query);
+        props.put("spring.datasource.url", "jdbc:postgresql://" + uri.getHost() + ":" + puerto + uri.getRawPath() + query);
         if (uri.getRawUserInfo() != null) {
             String[] partes = uri.getRawUserInfo().split(":", 2);
             props.put("spring.datasource.username", URLDecoder.decode(partes[0], StandardCharsets.UTF_8));

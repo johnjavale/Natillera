@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * E2E contra el stack completo: Next.js (BFF) en :3000 → Spring Boot en :8080 → MySQL con el seed dev
+ * E2E contra el stack completo: Next.js (BFF) en :3000 → Spring Boot en :8080 → PostgreSQL con el seed dev
  * (FECHA_SIMULADA=2027-03-20). Levante backend y base antes (docker compose up, o ver README).
  */
 export default defineConfig({

@@ -25,17 +25,17 @@ class InfraestructuraTest {
     @Test
     void databaseUrlDeRailwaySeTraduceAJdbc() {
         MockEnvironment env = new MockEnvironment()
-                .withProperty("DATABASE_URL", "mysql://natillera:cl%40ve@mysql.railway.internal:3306/railway");
+                .withProperty("DATABASE_URL", "postgresql://natillera:cl%40ve@postgres.railway.internal:5432/railway");
         new DatabaseUrlPostProcessor().postProcessEnvironment(env, null);
         assertThat(env.getProperty("spring.datasource.url"))
-                .isEqualTo("jdbc:mysql://mysql.railway.internal:3306/railway");
+                .isEqualTo("jdbc:postgresql://postgres.railway.internal:5432/railway");
         assertThat(env.getProperty("spring.datasource.username")).isEqualTo("natillera");
         assertThat(env.getProperty("spring.datasource.password")).isEqualTo("cl@ve");
     }
 
     @Test
     void databaseUrlJdbcSeRespeta() {
-        MockEnvironment env = new MockEnvironment().withProperty("DATABASE_URL", "jdbc:mysql://localhost/x");
+        MockEnvironment env = new MockEnvironment().withProperty("DATABASE_URL", "jdbc:postgresql://localhost/x");
         new DatabaseUrlPostProcessor().postProcessEnvironment(env, null);
         assertThat(env.getProperty("spring.datasource.url")).isNull();
     }

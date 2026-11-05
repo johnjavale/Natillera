@@ -7,7 +7,7 @@ Rutas de prueba relativas al repositorio. Abreviaturas de ruta: `BT` = `backend/
 | Tipo | Herramienta | Cómo correr |
 |---|---|---|
 | Unit (dominio y aplicación) | JUnit 5, AssertJ, Mockito | `cd backend && ./mvnw test` |
-| Integración (API + MySQL 8 real) | Spring Boot Test, MockMvc, Spring Security Test, Testcontainers (o MySQL local sin Docker) | `cd backend && ./mvnw verify` |
+| Integración (API + PostgreSQL 16 real) | Spring Boot Test, MockMvc, Spring Security Test, Testcontainers (o PostgreSQL embebido sin Docker) | `cd backend && ./mvnw verify` |
 | Frontend (unit) | Vitest + Testing Library | `cd frontend && npm test` |
 | E2E | Playwright (Pixel 7 y Chrome escritorio) | `docker compose up -d && cd frontend && npx playwright test` |
 
@@ -96,6 +96,10 @@ Rutas de prueba relativas al repositorio. Abreviaturas de ruta: `BT` = `backend/
 | SE-21 | frontend | Cookies httpOnly + SameSite=Lax | Login | Inspeccionar cookies | `nat_at` httpOnly, Lax | E2E | Sí · e2e "cerrar sesión borra las cookies" |
 | SE-22 | reportes | CSV injection | Celda `=HYPERLINK(...)` | Exportar CSV | Celda prefijada con `'` | Unit | Sí · `InfraestructuraTest#csvFormateaDineroPorcentajeYNeutralizaFormulas` |
 | SE-23 | frontend | Redirección abierta en `?volver=` | — | `/login?volver=https://otro` | Ignorado, va al inicio del rol | Manual | No |
+| SE-24 | auth | Recuperar contraseña por correo | Integrante 3 | POST /auth/recuperar-password, abrir enlace, POST /auth/restablecer-password | 202; 204; login con la nueva, la anterior 401; el enlace no sirve dos veces (422) | Integración | Sí · `BT/seguridad/RecuperacionPasswordIT#elEnlaceDelCorreoPermiteCambiarLaContrasenaUnaSolaVez` |
+| SE-25 | auth | Recuperación no revela cuentas | Correo inexistente | POST /auth/recuperar-password | 202 igual, sin correo enviado | Integración | Sí · `RecuperacionPasswordIT#correoInexistenteRespondeIgualYNoEnviaNada` |
+| SE-26 | auth | Enlace anterior, inventado o clave débil | — | Pedir dos enlaces; token falso; clave "corta1" | 422; la clave actual sigue sirviendo | Integración | Sí · `RecuperacionPasswordIT#pedirUnEnlaceNuevoInvalidaElAnterior`, `#tokenInventadoYContrasenaDebilSeRechazan` |
+| SE-27 | auth | Rate limit de solicitudes de recuperación | — | 6 solicitudes en 15 min | La 6.ª responde 429 | Integración | Sí · `RecuperacionPasswordIT#demasiadasSolicitudesResponden429` |
 
 ### 3.1 Matriz rol × endpoint (automatizada en `SeguridadIT#matrizRolPorEndpoint`)
 
@@ -123,7 +127,7 @@ Rutas de prueba relativas al repositorio. Abreviaturas de ruta: `BT` = `backend/
 | GET /reportes/estado-cuenta/3 | 200 | 200 | 200 |
 | GET /auditoria | 403 | 403 | 200 |
 
-## 4. Integración (API + MySQL)
+## 4. Integración (API + PostgreSQL)
 
 | ID | Módulo | Caso | Precondición | Pasos | Resultado esperado | Tipo | Automatizada |
 |---|---|---|---|---|---|---|---|
@@ -139,7 +143,7 @@ Rutas de prueba relativas al repositorio. Abreviaturas de ruta: `BT` = `backend/
 | IN-10 | integrantes | Cuota propia en INSCRIPCION + auditoría | Admin abre inscripción | PUT cuota | 200, ahorro esperado 3.000.000, registro CAMBIAR_CUOTA | Integración | Sí · `FlujosNegocioIT#cuotaPropia` |
 | IN-11 | resumen | Resumen y KPIs | Seed | GET /resumen | Caja 1.250.000 / 1.500.000; KPIs golden | Integración | Sí · `FlujosNegocioIT#resumen` |
 | IN-12 | resumen | Alerta de caja negativa | Préstamo 3.000.000 en mes 1 | GET /resumen | `alertaCajaNegativa=true` | Integración + E2E | Sí · `FlujosNegocioIT#alertaDeCajaNegativa`, e2e "alerta de caja negativa" |
-| IN-13 | shared | DATABASE_URL de Railway → JDBC | `mysql://u:cl%40ve@host/db` | Post-procesador | URL JDBC, usuario y clave decodificada | Unit | Sí · `InfraestructuraTest#databaseUrlDeRailwaySeTraduceAJdbc` |
+| IN-13 | shared | DATABASE_URL de Railway → JDBC | `postgresql://u:cl%40ve@host/db` | Post-procesador | URL JDBC, usuario y clave decodificada | Unit | Sí · `InfraestructuraTest#databaseUrlDeRailwaySeTraduceAJdbc` |
 
 ## 5. Reportes
 
@@ -217,9 +221,9 @@ Excel no tiene plan); préstamos que pasan el cierre o superan el saldo de la ca
 
 ## 10. Checklist de despliegue
 
-- [ ] Railway: MySQL creado y **Backups** habilitados.
+- [ ] Railway: PostgreSQL creado y **Backups** habilitados.
 - [ ] Servicio backend con Root Directory `backend`; build con `Dockerfile` (verificar en el log la etapa `cds`).
-- [ ] Variables backend: `DATABASE_URL=${{MySQL.MYSQL_URL}}` (red privada), `JWT_SECRET` (≥ 32 bytes aleatorios), `CORS_ALLOWED_ORIGIN`, `FRONTEND_URL`, `SPRING_PROFILES_ACTIVE=prod`. **No** definir `FECHA_SIMULADA`.
+- [ ] Variables backend: `DATABASE_URL=${{Postgres.DATABASE_URL}}` (red privada), `JWT_SECRET` (≥ 32 bytes aleatorios), `CORS_ALLOWED_ORIGIN`, `FRONTEND_URL`, `SPRING_PROFILES_ACTIVE=prod`. **No** definir `FECHA_SIMULADA`.
 - [ ] Migraciones: el log muestra `Successfully applied 1 migration … v1` (en prod no corre el seed).
 - [ ] Healthcheck `/actuator/health` en verde; `/v3/api-docs` y `/swagger-ui.html` responden 404/401 en prod.
 - [ ] *App sleeping* activo; primera petición tras dormir < 10 s.

@@ -1,4 +1,4 @@
-import { aportesLoteSchema, cambiarPasswordSchema, integranteSchema, loginSchema, movimientoSchema, prestamoSchema, usuarioSchema } from './esquemas';
+import { aportesLoteSchema, cambiarPasswordSchema, integranteSchema, loginSchema, movimientoSchema, prestamoSchema, recuperarPasswordSchema, restablecerPasswordSchema, usuarioSchema } from './esquemas';
 
 describe('esquemas Zod de formularios', () => {
   it('login exige usuario y contraseña', () => {
@@ -12,6 +12,15 @@ describe('esquemas Zod de formularios', () => {
     expect(cambiarPasswordSchema.safeParse({ ...base, nueva: 'sololetrasaqui', confirmacion: 'sololetrasaqui' }).success).toBe(false);
     expect(cambiarPasswordSchema.safeParse({ ...base, nueva: 'Familia2027x', confirmacion: 'Otra2027xxx' }).success).toBe(false);
     expect(cambiarPasswordSchema.safeParse({ ...base, nueva: 'Familia2027x', confirmacion: 'Familia2027x' }).success).toBe(true);
+  });
+
+  it('recuperar y restablecer contraseña: correo válido y misma regla de clave nueva', () => {
+    expect(recuperarPasswordSchema.safeParse({ correo: '' }).success).toBe(false);
+    expect(recuperarPasswordSchema.safeParse({ correo: '3000000003' }).success).toBe(false);
+    expect(recuperarPasswordSchema.safeParse({ correo: ' samay@natillera.local ' }).success).toBe(true);
+    expect(restablecerPasswordSchema.safeParse({ nueva: 'corta1', confirmacion: 'corta1' }).success).toBe(false);
+    expect(restablecerPasswordSchema.safeParse({ nueva: 'Familia2027x', confirmacion: 'Familia2027y' }).success).toBe(false);
+    expect(restablecerPasswordSchema.safeParse({ nueva: 'Familia2027x', confirmacion: 'Familia2027x' }).success).toBe(true);
   });
 
   it('préstamo: máximo de cuotas del ciclo y monto positivo', () => {

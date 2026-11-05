@@ -38,7 +38,7 @@ const REGLAS: Array<{ prefijo: string; roles: Rol[] }> = [
   { prefijo: '/mi-cuenta', roles: ['ADMIN', 'TESORERO', 'INTEGRANTE'] },
 ];
 
-export const RUTAS_PUBLICAS = ['/login'];
+export const RUTAS_PUBLICAS = ['/login', '/recuperar-password', '/restablecer-password'];
 
 /** Guarda de rutas usada por middleware.ts. */
 export function rutaPermitida(ruta: string, roles: readonly Rol[]): boolean {

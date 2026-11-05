@@ -41,11 +41,8 @@ public class LibroQueryAdapter implements LibroQueryPort {
                 LEFT JOIN tesorero t ON t.id = i.tesorero_id
                 LEFT JOIN (SELECT cajita_id, SUM(entrada) AS entradas, SUM(salida) AS salidas
                            FROM movimiento GROUP BY cajita_id) m ON m.cajita_id = c.id
-                LEFT JOIN (SELECT cajita_id, saldo_app, fecha
-                           FROM (SELECT cajita_id, saldo_app, fecha,
-                                        ROW_NUMBER() OVER (PARTITION BY cajita_id ORDER BY fecha DESC, id DESC) AS n
-                                 FROM saldo_reportado_nu) r
-                           WHERE n = 1) s ON s.cajita_id = c.id
+                LEFT JOIN (SELECT DISTINCT ON (cajita_id) cajita_id, saldo_app, fecha
+                           FROM saldo_reportado_nu ORDER BY cajita_id, fecha DESC, id DESC) s ON s.cajita_id = c.id
                 WHERE 1 = 1 %s
                 ORDER BY i.id
                 """.formatted(filtro(integrantes, "i.id"));
@@ -70,8 +67,8 @@ public class LibroQueryAdapter implements LibroQueryPort {
             return List.of();
         }
         String sql = """
-                SELECT c.integrante_id, EXTRACT(YEAR FROM m.fecha) AS anio,
-                       EXTRACT(MONTH FROM m.fecha) AS mes, SUM(m.entrada - m.salida) AS monto
+                SELECT c.integrante_id, CAST(EXTRACT(YEAR FROM m.fecha) AS INT) AS anio,
+                       CAST(EXTRACT(MONTH FROM m.fecha) AS INT) AS mes, SUM(m.entrada - m.salida) AS monto
                 FROM movimiento m JOIN cajita c ON c.id = m.cajita_id
                 WHERE m.tipo = 'AHORRO' %s
                 GROUP BY c.integrante_id, anio, mes
@@ -131,7 +128,7 @@ public class LibroQueryAdapter implements LibroQueryPort {
             return List.of();
         }
         String sql = """
-                SELECT EXTRACT(YEAR FROM m.fecha) AS anio, EXTRACT(MONTH FROM m.fecha) AS mes,
+                SELECT CAST(EXTRACT(YEAR FROM m.fecha) AS INT) AS anio, CAST(EXTRACT(MONTH FROM m.fecha) AS INT) AS mes,
                        i.tesorero_id, SUM(m.entrada) AS entradas, SUM(m.salida) AS salidas
                 FROM movimiento m JOIN cajita c ON c.id = m.cajita_id JOIN integrante i ON i.id = c.integrante_id
                 WHERE 1 = 1 %s

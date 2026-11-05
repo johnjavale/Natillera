@@ -1,11 +1,13 @@
 package co.natillera.auth.infrastructure.web;
 
 import co.natillera.auth.application.AuthService;
+import co.natillera.auth.application.RecuperacionContrasenaService;
 import co.natillera.auth.application.SesionActual;
 import co.natillera.auth.application.UsuarioActual;
 import co.natillera.auth.domain.Rol;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +37,14 @@ public class AuthController {
                                          @NotBlank(message = "Ingrese la nueva contraseña") @Size(max = 72) String nueva) {
     }
 
+    public record RecuperarPasswordRequest(@NotBlank(message = "Ingrese su correo")
+                                           @Email(message = "Correo inválido") @Size(max = 160) String correo) {
+    }
+
+    public record RestablecerPasswordRequest(@NotBlank @Size(max = 100) String token,
+                                             @NotBlank(message = "Ingrese la nueva contraseña") @Size(max = 72) String nueva) {
+    }
+
     public record UsuarioSesionDto(Long id, String login, String nombre, Set<Rol> roles, Long integranteId,
                                    Long tesoreroId, boolean debeCambiarPassword) {
         static UsuarioSesionDto de(UsuarioActual u) {
@@ -51,10 +61,12 @@ public class AuthController {
     }
 
     private final AuthService auth;
+    private final RecuperacionContrasenaService recuperacion;
     private final SesionActual sesion;
 
-    public AuthController(AuthService auth, SesionActual sesion) {
+    public AuthController(AuthService auth, RecuperacionContrasenaService recuperacion, SesionActual sesion) {
         this.auth = auth;
+        this.recuperacion = recuperacion;
         this.sesion = sesion;
     }
 
@@ -77,6 +89,20 @@ public class AuthController {
     @PostMapping("/cambiar-password")
     public SesionDto cambiarPassword(@Valid @RequestBody CambiarPasswordRequest req) {
         return SesionDto.de(auth.cambiarContrasena(sesion.usuario().usuarioId(), req.actual(), req.nueva()));
+    }
+
+    /** Siempre 202, exista o no el correo (no revela qué cuentas hay). */
+    @PostMapping("/recuperar-password")
+    public ResponseEntity<Void> recuperarPassword(@Valid @RequestBody RecuperarPasswordRequest req,
+                                                  HttpServletRequest http) {
+        recuperacion.solicitar(req.correo(), http.getRemoteAddr());
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/restablecer-password")
+    public ResponseEntity<Void> restablecerPassword(@Valid @RequestBody RestablecerPasswordRequest req) {
+        recuperacion.restablecer(req.token(), req.nueva());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me")

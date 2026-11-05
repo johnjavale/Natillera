@@ -79,3 +79,22 @@ export function problema(status: number, titulo: string, detalle: string): NextR
     headers: { 'Content-Type': 'application/problem+json' },
   });
 }
+
+/** Reenvía al backend una petición pública (sin sesión), con la IP del cliente para el rate limit. */
+export async function reenviarPublico(req: Request, ruta: string): Promise<NextResponse> {
+  if (!mismoOrigen(req)) return problema(403, 'Origen no permitido', 'Solicitud de otro origen');
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const ip = ipCliente(req);
+  if (ip) headers['X-Forwarded-For'] = ip;
+  let res: Response;
+  try {
+    res = await fetch(backendUrl(ruta), { method: 'POST', headers, body: await req.text(), cache: 'no-store' });
+  } catch {
+    return problema(503, 'Servicio no disponible', 'No fue posible contactar el servidor. Intente de nuevo.');
+  }
+  if (res.status === 202 || res.status === 204) return new NextResponse(null, { status: res.status });
+  return new NextResponse(await res.text(), {
+    status: res.status,
+    headers: { 'Content-Type': res.headers.get('content-type') ?? 'application/problem+json' },
+  });
+}

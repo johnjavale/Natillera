@@ -7,7 +7,7 @@ spring:
     virtual:
       enabled: true
   datasource:
-    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/natillera}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/natillera}
     username: ${DATABASE_USER:natillera}
     password: ${DATABASE_PASSWORD:natillera}
     hikari:
@@ -78,6 +78,18 @@ app:
     max-intentos: 5
     ventana-minutos: 15
   fecha-simulada: ${FECHA_SIMULADA:}
+  # "¿Olvidó su contraseña?": enlace por correo de un solo uso
+  recuperacion:
+    minutos: 30
+    max-solicitudes: 5
+  # SMTP (p. ej. Gmail: smtp.gmail.com, 587, la cuenta y una contraseña de aplicación). Sin MAIL_HOST no se envía.
+  correo:
+    host: ${MAIL_HOST:}
+    puerto: ${MAIL_PORT:587}
+    usuario: ${MAIL_USERNAME:}
+    clave: ${MAIL_PASSWORD:}
+    remitente: ${MAIL_FROM:}
+    mostrar-en-log: false
 
 logging:
   level:
