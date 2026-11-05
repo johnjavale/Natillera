@@ -41,7 +41,7 @@ INSERT INTO integrante (id, usuario_id, nombre, telefono, cuota_mensual, tesorer
   (10, 10, 'Integrante 10',       '3000000010', 120000, 2, TRUE, 'seed');
 
 INSERT INTO cajita (id, integrante_id, nombre, creado_por)
-SELECT id, id, 'Natillera - ' || nombre, 'seed' FROM integrante;
+SELECT id, id, CONCAT('Natillera - ', nombre), 'seed' FROM integrante;
 
 -- Aportes (movimientos AHORRO): enero completo; en febrero no aporta Pascuala (2); en marzo no aportan 2 ni Yarle (9)
 INSERT INTO movimiento (cajita_id, fecha, tipo, descripcion, entrada, salida, creado_por)
@@ -95,11 +95,3 @@ INSERT INTO movimiento (cajita_id, fecha, tipo, descripcion, entrada, salida, ac
 INSERT INTO saldo_reportado_nu (cajita_id, fecha, saldo_app, creado_por) VALUES
   (1, DATE '2027-03-15', 500720, 'seed'),
   (4, DATE '2027-03-15', 300000, 'seed');
-
-SELECT setval('usuario_id_seq', (SELECT MAX(id) FROM usuario));
-SELECT setval('tesorero_id_seq', (SELECT MAX(id) FROM tesorero));
-SELECT setval('integrante_id_seq', (SELECT MAX(id) FROM integrante));
-SELECT setval('cajita_id_seq', (SELECT MAX(id) FROM cajita));
-SELECT setval('prestamo_id_seq', (SELECT MAX(id) FROM prestamo));
-SELECT setval('pago_cuota_id_seq', (SELECT MAX(id) FROM pago_cuota));
-SELECT setval('actividad_id_seq', (SELECT MAX(id) FROM actividad));

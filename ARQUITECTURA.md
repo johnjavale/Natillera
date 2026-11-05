@@ -33,7 +33,7 @@ flowchart LR
     end
     subgraph Railway [Railway · Hobby US$5]
         B[Spring Boot 3.5 · Java 21<br/>API REST /api/v1<br/>JWT]
-        P[(PostgreSQL 16)]
+        P[(MySQL 8)]
     end
     V -->|HTTPS + Authorization: Bearer| B
     B -->|red privada · HikariCP 5 conexiones| P
@@ -115,18 +115,18 @@ erDiagram
 | Tabla | Descripción |
 |---|---|
 | `usuario`, `rol`, `usuario_rol` | Usuarios (correo o celular, BCrypt 12, activo, cambio obligatorio) y relación N:M con roles. |
-| `refresh_token` | Hash SHA-256 del refresh token, familia (UUID), expiración, usado/revocado. |
+| `refresh_token` | Hash SHA-256 del refresh token, familia (UUID en `BINARY(16)`), expiración, usado/revocado. |
 | `ciclo` | Configuración (hoja Configuración) y estado `INSCRIPCION / ACTIVO / CERRADO`. |
 | `tesorero` | Dueño de una cuenta Nu. |
 | `integrante` | Cuota mensual, teléfono, tesorero asignado, vínculo opcional con usuario. |
 | `cajita` | Una por integrante. Su tesorero se deriva del integrante. |
 | `movimiento` | **Libro único del dinero.** Entrada **o** salida (CHECK), tipo, referencias a préstamo/pago/actividad y `anula_a` para contramovimientos. Índices `(cajita_id, fecha)` y `(tipo)`. |
 | `saldo_reportado_nu` | Saldo que muestra la app Nu en una fecha (conciliación). |
-| `prestamo`, `pago_cuota` | Préstamo (monto, mes, cuotas, tasa, cajita origen) y pagos (índice único parcial por cuota no anulada). |
+| `prestamo`, `pago_cuota` | Préstamo (monto, mes, cuotas, tasa, cajita origen) y pagos (índice único sobre una columna generada que vale NULL en los pagos anulados: una sola cuota vigente por número). |
 | `actividad`, `asignacion_boletas` | Rifas y boletas por integrante cuando difieren del valor por defecto. |
 | `auditoria` | Solo cambios sensibles: cuotas, tasas/configuración, anulaciones, roles, estado del ciclo. |
 
-Los **aportes no tienen tabla**: se derivan de los movimientos `AHORRO`. El dinero es `NUMERIC(14,2)` y en Java
+Los **aportes no tienen tabla**: se derivan de los movimientos `AHORRO`. El dinero es `DECIMAL(14,2)` y en Java
 `BigDecimal` envuelto en el value object `Dinero`. Migraciones: `backend/src/main/resources/db/migration/V1__esquema.sql`
 y seed `db/seed/V2__seed_dev.sql` (solo perfil `dev`).
 
@@ -140,7 +140,7 @@ sequenceDiagram
     participant N as Navegador
     participant F as Next.js BFF
     participant B as Spring Boot
-    participant D as PostgreSQL
+    participant D as MySQL
     N->>F: POST /api/auth/login {login, password}
     F->>B: POST /api/v1/auth/login (+X-Forwarded-For)
     B->>B: rate limit (5 fallos / 15 min por IP y usuario)
@@ -324,13 +324,13 @@ SVG; sin pagos ni publicidad (Vercel Hobby es para uso no comercial).
 
 ## 9. Despliegue y operación
 
-**Railway (backend + PostgreSQL):** servicio con Root Directory `backend` (usa `Dockerfile` y `railway.json`),
-variables `DATABASE_URL=${{Postgres.DATABASE_URL}}` (red privada), `JWT_SECRET`, `CORS_ALLOWED_ORIGIN`,
-`FRONTEND_URL`, `SPRING_PROFILES_ACTIVE=prod`. Backups habilitados en el servicio de PostgreSQL.
+**Railway (backend + MySQL):** servicio con Root Directory `backend` (usa `Dockerfile` y `railway.json`),
+variables `DATABASE_URL=${{MySQL.MYSQL_URL}}` (red privada), `JWT_SECRET`, `CORS_ALLOWED_ORIGIN`,
+`FRONTEND_URL`, `SPRING_PROFILES_ACTIVE=prod`. Backups habilitados en el servicio de MySQL.
 
 **Vercel (frontend):** Root Directory `frontend`, variables `BACKEND_URL`, `SESSION_SECRET`, `COOKIE_SECURE=true`.
 
-**Primer administrador en producción** (el seed solo corre en dev). Genere el hash y ejecute en la consola de PostgreSQL:
+**Primer administrador en producción** (el seed solo corre en dev). Genere el hash y ejecute en la consola de MySQL:
 
 ```bash
 htpasswd -bnBC 12 "" 'ClaveTemporal2027' | tr -d ':\n'   # o cualquier generador BCrypt cost 12

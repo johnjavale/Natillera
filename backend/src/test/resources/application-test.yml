@@ -1,4 +1,4 @@
-# Pruebas de integración: PostgreSQL real (Testcontainers o embebido) con el esquema y el seed de desarrollo.
+# Pruebas de integración: MySQL 8 real (Testcontainers o un MySQL local) con el esquema y el seed de desarrollo.
 spring:
   flyway:
     locations: classpath:db/migration,classpath:db/seed

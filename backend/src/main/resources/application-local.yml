@@ -1,0 +1,15 @@
+# Perfil local: base en blanco (solo el esquema, sin seed), Swagger UI y fecha real.
+#   SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run
+spring:
+  flyway:
+    locations: classpath:db/migration
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:local-secret-solo-en-esta-maquina-0123456789abcdef0123456789}

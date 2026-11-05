@@ -1,28 +1,31 @@
-# Entorno local completo: PostgreSQL 16 + backend (perfil dev con seed) + frontend.
+# Entorno local completo: MySQL 8 + backend (perfil dev con seed) + frontend.
 #   docker compose up --build
 #   http://localhost:3000  (admin@natillera.local / Natillera2027*)
 services:
-  postgres:
-    image: postgres:16-alpine
+  mysql:
+    image: mysql:8.0
     environment:
-      POSTGRES_DB: natillera
-      POSTGRES_USER: natillera
-      POSTGRES_PASSWORD: natillera
+      MYSQL_DATABASE: natillera
+      MYSQL_USER: natillera
+      MYSQL_PASSWORD: natillera
+      MYSQL_ROOT_PASSWORD: root-solo-desarrollo
+      TZ: America/Bogota
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U natillera -d natillera"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -unatillera -pnatillera --silent"]
       interval: 5s
       timeout: 3s
-      retries: 20
+      retries: 30
 
   backend:
     build: ./backend
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      DATABASE_URL: jdbc:postgresql://postgres:5432/natillera
+      DATABASE_URL: jdbc:mysql://mysql:3306/natillera
       DATABASE_USER: natillera
       DATABASE_PASSWORD: natillera
       JWT_SECRET: secreto-solo-para-desarrollo-local-0123456789abcdef
@@ -32,7 +35,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
     mem_limit: 400m
 
@@ -48,4 +51,4 @@ services:
       - backend
 
 volumes:
-  pgdata:
+  mysqldata:

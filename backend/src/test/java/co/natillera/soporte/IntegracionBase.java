@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Base de las pruebas de integración: API completa (MockMvc) + PostgreSQL real con Flyway (esquema + seed dev).
+ * Base de las pruebas de integración: API completa (MockMvc) + MySQL real con Flyway (esquema + seed dev).
  * Las clases que modifican datos se anotan con @Transactional para revertir al final de cada prueba.
  */
 @SpringBootTest
@@ -54,7 +54,7 @@ public abstract class IntegracionBase {
 
     @DynamicPropertySource
     static void baseDeDatos(DynamicPropertyRegistry registry) {
-        PostgresDePrueba.Conexion c = PostgresDePrueba.obtener();
+        MysqlDePrueba.Conexion c = MysqlDePrueba.obtener();
         registry.add("spring.datasource.url", c::url);
         registry.add("spring.datasource.username", c::usuario);
         registry.add("spring.datasource.password", c::clave);

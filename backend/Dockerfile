@@ -17,11 +17,11 @@ WORKDIR /app/extraido
 # Mismas opciones de JVM que en ejecución para que el archivo CDS sea compatible.
 RUN SPRING_PROFILES_ACTIVE=prod \
     JWT_SECRET=entrenamiento-cds-no-es-un-secreto-real-0123456789 \
-    DATABASE_URL=jdbc:postgresql://localhost:1/entrenamiento \
+    DATABASE_URL=jdbc:mysql://localhost:1/entrenamiento \
     java -Xmx256m -Xss512k -XX:+UseSerialGC -XX:MaxMetaspaceSize=128m -XX:TieredStopAtLevel=1 \
          -XX:ArchiveClassesAtExit=app.jsa -Dspring.context.exit=onRefresh \
          -Dspring.flyway.enabled=false -Dspring.jpa.hibernate.ddl-auto=none \
-         -Dspring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect \
+         -Dspring.jpa.database-platform=org.hibernate.dialect.MySQLDialect \
          -Dspring.jpa.properties.hibernate.boot.allow_jdbc_metadata_access=false \
          -Dspring.datasource.hikari.initialization-fail-timeout=-1 \
          -jar app.jar

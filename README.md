@@ -9,7 +9,7 @@ fórmulas.
 
 | Carpeta | Contenido |
 |---|---|
-| [backend/](backend/) | API Spring Boot 3.5 · Java 21 · PostgreSQL 16 · JWT · Flyway |
+| [backend/](backend/) | API Spring Boot 3.5 · Java 21 · MySQL 8 · JWT · Flyway |
 | [frontend/](frontend/) | Next.js 15 (App Router, BFF) · TypeScript · Tailwind · TanStack Query |
 | [ARQUITECTURA.md](ARQUITECTURA.md) | Arquitectura, modelo de datos, patrones, decisiones y despliegue |
 | [test.md](test.md) | Catálogo de pruebas, trazabilidad y evidencia de la última ejecución |
@@ -24,7 +24,7 @@ docker compose up --build
 
 - Frontend: http://localhost:3000
 - Backend: http://localhost:8080 (Swagger UI en http://localhost:8080/swagger-ui.html, solo perfil `dev`)
-- PostgreSQL: `localhost:5432` (natillera / natillera)
+- MySQL: `localhost:3306` (natillera / natillera)
 
 El perfil `dev` carga el seed y fija la fecha simulada en **2027-03-20** (mes 3 del ciclo 2027) para que haya aportes,
 atrasos, un préstamo y rifas que mostrar. Cambie `FECHA_SIMULADA` en `docker-compose.yml` o déjela vacía para usar la
@@ -32,7 +32,13 @@ fecha real.
 
 ### Opción B — Sin Docker
 
-Requisitos: JDK 21, Node 22 y un PostgreSQL 16 con una base `natillera` (usuario y clave `natillera`).
+Requisitos: JDK 21, Node 22 y un MySQL 8.0.16+ con una base `natillera` (usuario y clave `natillera`):
+
+```sql
+CREATE DATABASE natillera CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+CREATE USER 'natillera'@'localhost' IDENTIFIED BY 'natillera';
+GRANT ALL PRIVILEGES ON natillera.* TO 'natillera'@'localhost';
+```
 
 ```bash
 # Backend (perfil dev con seed)
@@ -44,6 +50,22 @@ cd frontend
 cp .env.example .env.local        # BACKEND_URL, SESSION_SECRET, COOKIE_SECURE=false
 npm install
 npm run dev                       # http://localhost:3000
+```
+
+**Base en blanco (perfil `local`):** crea solo el esquema, sin seed, con la fecha real.
+
+```bash
+cd backend
+SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run   # PowerShell: $env:SPRING_PROFILES_ACTIVE="local"; .\mvnw.cmd spring-boot:run
+```
+
+Para ingresar la primera vez, cree un administrador en MySQL (clave temporal `Natillera2027*`; el sistema pide
+cambiarla al ingresar):
+
+```sql
+INSERT INTO usuario (nombre, correo, password_hash, debe_cambiar_password, creado_por) VALUES
+  ('Administrador', 'admin@natillera.local', '$2a$12$UmqY7ns0tN1meGXecxKV..Lf6xixUcLRENkqug55lFOBVreqA4wnO', TRUE, 'instalacion');
+INSERT INTO usuario_rol (usuario_id, rol_id) SELECT id, 1 FROM usuario WHERE correo = 'admin@natillera.local';
 ```
 
 ### Credenciales del seed (solo desarrollo)
@@ -63,27 +85,33 @@ Cuotas de la sección 3.9: 100.000, 50.000, 200.000, 100.000, 150.000, 50.000, 3
 ## Pruebas
 
 ```bash
-cd backend && ./mvnw verify        # unitarias (golden tests del Excel) + integración contra PostgreSQL real
+cd backend && ./mvnw verify        # unitarias (golden tests del Excel) + integración contra MySQL real
 cd frontend && npm test            # Vitest
 cd frontend && npx playwright test # E2E: requiere el stack arriba (docker compose up)
 ```
 
-Las pruebas de integración usan **Testcontainers** cuando hay Docker; si no lo hay, levantan automáticamente un
-PostgreSQL 16 embebido (zonky), así que también corren en Windows sin Docker. Para forzar el embebido:
-`NATILLERA_TEST_DB=embebido`.
+Las pruebas de integración usan **Testcontainers** (`mysql:8.0`) cuando hay Docker. Si no lo hay, usan un MySQL
+local: por defecto `jdbc:mysql://localhost:3306/natillera_test` con usuario y clave `natillera`, configurable con
+`NATILLERA_TEST_DB_URL`, `NATILLERA_TEST_DB_USER` y `NATILLERA_TEST_DB_PASSWORD`. Esa base **se borra y se recrea en
+cada ejecución**, por eso su nombre debe terminar en `_test`. Para forzar el MySQL local aunque haya Docker:
+`NATILLERA_TEST_DB=local`.
+
+```sql
+GRANT ALL PRIVILEGES ON natillera_test.* TO 'natillera'@'localhost';
+```
 
 ## Desplegar
 
-### 1. Backend + PostgreSQL en Railway (plan Hobby)
+### 1. Backend + MySQL en Railway (plan Hobby)
 
-1. Cree un proyecto en Railway y agregue **PostgreSQL** (Backups → habilitar).
+1. Cree un proyecto en Railway y agregue **MySQL** (Backups → habilitar).
 2. Agregue un servicio desde el repositorio con **Root Directory** = `backend`. Railway usa `backend/Dockerfile` y
    `backend/railway.json` (healthcheck `/actuator/health`, *app sleeping* activado).
 3. Variables del servicio:
 
    | Variable | Valor |
    |---|---|
-   | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` (red privada; el backend convierte `postgresql://…` a JDBC) |
+   | `DATABASE_URL` | `${{MySQL.MYSQL_URL}}` (red privada; el backend convierte `mysql://…` a JDBC) |
    | `JWT_SECRET` | `openssl rand -base64 48` |
    | `CORS_ALLOWED_ORIGIN` | `https://<su-app>.vercel.app` |
    | `FRONTEND_URL` | `https://<su-app>.vercel.app` |
@@ -91,7 +119,7 @@ PostgreSQL 16 embebido (zonky), así que también corren en Windows sin Docker. 
 
 4. Genere un dominio público para el servicio (lo usará Vercel como `BACKEND_URL`).
 5. Primer usuario administrador: el perfil `prod` no carga el seed. Cree el admin con un `INSERT` en la consola de
-   PostgreSQL de Railway (ver [ARQUITECTURA.md §9](ARQUITECTURA.md#9-despliegue-y-operación)); el sistema le pedirá
+   MySQL de Railway (ver [ARQUITECTURA.md §9](ARQUITECTURA.md#9-despliegue-y-operación)); el sistema le pedirá
    cambiar la contraseña al ingresar.
 
 ### 2. Frontend en Vercel (plan Hobby, uso no comercial)

@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Flujos completos API + PostgreSQL (seed dev, fecha simulada 2027-03-20 → mes 3). */
+/** Flujos completos API + MySQL (seed dev, fecha simulada 2027-03-20 → mes 3). */
 @DisplayName("Flujos de negocio de punta a punta")
 @Transactional
 class FlujosNegocioIT extends IntegracionBase {
